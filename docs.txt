@@ -1,0 +1,98 @@
+import time
+import functools
+
+'''Constraint Satisfaction Routines
+   A) class Variable
+
+      This class allows one to define CSP variables.
+
+      On initialization the variable object can be given a name, and
+      an original domain of values. This list of domain values can be
+      added but NOT deleted from.
+      
+      To support constraint propagation, the class also maintains a
+      set of flags to indicate if a value is still in its current domain.
+      So one can remove values, add them back, and query if they are 
+      still current. 
+
+    B) class constraint
+
+      This class allows one to define constraints specified by tables
+      of satisfying assignments.
+
+      On initialization the variables the constraint is over is
+      specified (i.e. the scope of the constraint). This must be an
+      ORDERED list of variables. This list of variables cannot be
+      changed once the constraint object is created.
+
+      Once initialized the constraint can be incrementally initialized
+      with a list of satisfying tuples. Each tuple specifies a value
+      for each variable in the constraint (in the same ORDER as the
+      variables of the constraint were specified).
+
+    C) Backtracking routine---takes propagator and CSP as arguments
+       so that basic backtracking, forward-checking or GAC can be 
+       executed depending on the propagator used.
+
+'''
+
+class Variable: 
+
+    '''Class for defining CSP variables.  On initialization the
+       variable object should be given a name, and optionally a list of
+       domain values. Later on more domain values an be added...but
+       domain values can never be removed.
+
+       The variable object offers two types of functionality to support
+       search. 
+       (a) It has a current domain, implimented as a set of flags 
+           determining which domain values are "current", i.e., unpruned.
+           - you can prune a value, and restore it.
+           - you can obtain a list of values in the current domain, or count
+             how many are still there
+
+       (b) You can assign and unassign a value to the variable.
+           The assigned value must be from the variable domain, and
+           you cannot assign to an already assigned variable.
+
+           You can get the assigned value e.g., to find the solution after
+           search.
+           
+           Assignments and current domain interact at the external interface
+           level. Assignments do not affect the internal state of the current domain 
+           so as not to interact with value pruning and restoring during search. 
+
+           But conceptually when a variable is assigned it only has
+           the assigned value in its current domain (viewing it this
+           way makes implementing the propagators easier). Hence, when
+           the variable is assigned, the 'cur_domain' returns the
+           assigned value as the sole member of the current domain,
+           and 'in_cur_domain' returns True only for the assigned
+           value. However, the internal state of the current domain
+           flags are not changed so that pruning and unpruning can
+           work independently of assignment and unassignment. 
+           '''
+class Constraint: 
+    '''Class for defining constraints variable objects specifes an
+       ordering over variables.  This ordering is used when calling
+       the satisfied function which tests if an assignment to the
+       variables in the constraint's scope satisfies the constraint'''
+
+class CSP:
+    '''Class for packing up a set of variables into a CSP problem.
+       Contains various utility routines for accessing the problem.
+       The variables of the CSP can be added later or on initialization.
+       The constraints must be added later'''
+########################################################
+# Backtracking Routine                                 #
+########################################################
+
+class BT:
+    '''use a class to encapsulate things like statistics
+       and bookeeping for pruning/unpruning variabel domains
+       To use backtracking routine make one of these objects
+       passing the CSP as a parameter. Then you can invoke
+       that objects's bt_search routine with the right
+       kind or propagator function to obtain plain backtracking
+       forward-checking or gac'''
+
