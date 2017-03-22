@@ -1,451 +1,244 @@
-import time
-import functools
+import time 
+from copy import deepcopy
 
-class Variable: 
+class Variable:
 
-    def __init__(self, name, domain=[]):
-        '''Create a variable object, specifying its name (a
-        string). Optionally specify the initial domain.
-        '''
-        self.name = name                #text name for variable
-        self.dom = list(domain)         #Make a copy of passed domain
-        self.curdom = [True] * len(domain)      #using list
-        #for bt_search
-        self.assignedValue = None
+	# Lookup table maps vals to Fale if on board else True 
+	def __init__(self, name, lookup_table, val_to_var):
+		""" (self, str, dict int:bool) -> None 
+			Inits the variable.	The lookup table is a
+			global table of possible vals for all variables
+			in the game, storing whether they're available.
+		"""
+		self.name = name
+		self.value = None
+		self.l_table = lookup_table
+		self.v_to_var = val_to_var
+		self.cur_dom = get_curdom()
+		self.fixed = False
 
-    def add_domain_values(self, values):
-        '''Add additional domain values to the domain
-           Removals not supported removals'''
-        for val in values: 
-            self.dom.append(val)
-            self.curdom.append(True)
+	def get_curdom(self):
+		""" (self) -> None
+			Returns vals in the vars current domain.
+		"""
+		return [val for val, pres in self.l_table if pres]
 
-    def domain_size(self):
-        '''Return the size of the (permanent) domain'''
-        return(len(self.dom))
+	def assign(self, val):
+		""" (self, int) -> None
+			Assigns val to the variable.
+		"""
+		if self.l_table[val]:
+			self.value = val
+			self.l_table[val] = False
+			self.v_to_var[val] = self
+		else:
+			return False
 
-    def domain(self):
-        '''return the variable's (permanent) domain'''
-        return(list(self.dom))
+	def unassign(self):
+		""" (self) -> None
+			Unassigns the current value and marks it free
+			in the lookup table.
+		"""
+		if not self.fixed():
+			self.v_to_var[self.value] = None
+			self.l_table[self.value] = True
+			self.value = None
+	
+	def prune_val(self, value):
+		""" (self, int) -> None
+		Removes value from the vars curdom. 
+		"""
+		self.cur_dom.remove(value)
+		
+	def unprune_val(self, value):
+		""" Undoes the last thing. """
+		self.cur_dom.append(value)
 
-    #
-    #methods for current domain (pruning and unpruning)
-    #
+class Constraint:
 
-    def prune_value(self, value):
-        '''Remove value from CURRENT domain'''
-        self.curdom[self.value_index(value)] = False
+	def __init__(self, name, keystone, scope):
+		""" (self, str, variable, iterable of variables, fn)
+			Inits the constraint. Keystone refers to the stone
+			that the constraint revolves around.
+		"""
+		self.name = name
+		self.scope = scope # list of vars
+		self.keystone = keystone # center var
 
-    def unprune_value(self, value):
-        '''Restore value to CURRENT domain'''
-        self.curdom[self.value_index(value)] = True
-
-    def cur_domain(self):
-        '''return list of values in CURRENT domain (if assigned 
-           only assigned value is viewed as being in current domain)'''
-        vals = []
-        if self.is_assigned():
-            vals.append(self.get_assigned_value())
-        else:
-            for i, val in enumerate(self.dom):
-                if self.curdom[i]:
-                    vals.append(val)
-        return vals
-
-    def in_cur_domain(self, value):
-        '''check if value is in CURRENT domain (without constructing list)
-           if assigned only assigned value is viewed as being in current 
-           domain'''
-        if not value in self.dom:
-
-            return False
-        if self.is_assigned():
-            return value == self.get_assigned_value()
-        else:
-            return self.curdom[self.value_index(value)]
-
-    def cur_domain_size(self):
-        '''Return the size of the variables domain (without construcing list)'''
-        if self.is_assigned():
-            return 1
-        else:
-            return(sum(1 for v in self.curdom if v))
-
-    def restore_curdom(self):
-        '''return all values back into CURRENT domain'''
-        for i in range(len(self.curdom)):
-            self.curdom[i] = True
-
-    #
-    #methods for assigning and unassigning
-    #
-
-    def is_assigned(self):
-        return self.assignedValue != None
-    
-    def assign(self, value):
-        '''Used by bt_search. When we assign we remove all other values
-           values from curdom. We save this information so that we can
-           reverse it on unassign'''
-
-        if self.is_assigned() or not self.in_cur_domain(value):
-            print("ERROR: trying to assign variable", self, 
-                  "that is already assigned or illegal value (not in curdom)")
-            return
-
-        self.assignedValue = value
-
-    def unassign(self):
-        '''Used by bt_search. Unassign and restore old curdom'''
-        if not self.is_assigned():
-            print("ERROR: trying to unassign variable", self, " not yet assigned")
-            return
-        self.assignedValue = None
-
-    def get_assigned_value(self):
-        '''return assigned value...returns None if is unassigned'''
-        return self.assignedValue
-
-    #
-    #internal methods
-    #
-
-    def value_index(self, value):
-        '''Domain values need not be numbers, so return the index
-           in the domain list of a variable value'''
-        return self.dom.index(value)
-
-    def __repr__(self):
-        return("Var-{}".format(self.name))
-
-    def __str__(self):
-        return("Var--{}".format(self.name))
-
-    def print_all(self):
-        '''Also print the variable domain and current domain'''
-        print("Var--\"{}\": Dom = {}, CurDom = {}".format(self.name, 
-                                                             self.dom, 
-                                                             self.curdom))
-class Constraint: 
-    
-    def __init__(self, name, scope, eval_fn): 
-		""" (Constraint, str, iterable of var, function: vals -> bool) -> None""" 
-        
-        self.scope = list(scope)
-        self.name = name
-        self.sat_tuples = dict()
-        self.eval_fn = eval_fn
-
-        #The next object data item 'sup_tuples' will be used to help
-        #support GAC propgation. It allows access to a list of 
-        #satisfying tuples that contain a particular variable/value
-        #pair.
-        self.sup_tuples = dict()
-
-    def check(self, vals):
-        '''Given list of values, one for each variable in the
-           constraints scope, return true if and only if these value
-           assignments satisfy the constraint by applying the
-           constraints "satisfies" function.  Note the list of values
-           are must be ordered in the same order as the list of
-           variables in the constraints scope'''
-
-        return self.eval_fn(vals)
-
-    def get_n_unasgn(self):
-        '''return the number of unassigned variables in the constraint's scope'''
-        n = 0
-        for v in self.scope:
-            if not v.is_assigned():
-                n = n + 1
-        return n
-
-    def get_unasgn_vars(self): 
-        '''return list of unassigned variables in constraint's scope. Note
-           more expensive to get the list than to then number'''
-        vs = []
-        for v in self.scope:
-            if not v.is_assigned():
-                vs.append(v)
-        return vs
-
-	# We technically can't use this anymore.. except if we are instantiating the last unassigned 
-	# var in the constraint. Consider whether necessary to do this. 
-    def has_support(self, var, val):
-        '''Test if a variable value pair has a supporting tuple (a set
-           of assignments satisfying the constraint where each value is
-           still in the corresponding variables current domain
-        '''
-        if (var, val) in self.sup_tuples:
-            for t in self.sup_tuples[(var, val)]:
-                if self.tuple_is_valid(t):
-                    return True
-        return False
-
-    def tuple_is_valid(self, t):
-        '''Internal routine. Check if every value in tuple is still in
-           corresponding variable domains'''
-        for i, var in enumerate(self.scope):
-            if not var.in_cur_domain(t[i]):
-                return False
-        return True
-
-    def __str__(self):
-        return("{}({})".format(self.name,[var.name for var in self.scope]))
+	def check(self):
+		# TODO: edge case for first and last variables
+		l_table = self.keystone.l_table
+		center = self.keystone.value
+		if center is None: return True
+		predecessor, successor = center - 1, center + 1
+		number_of_open_adj = len([x for x in self.scope if x is None])
+		p, s = True, True
+		for neighbour in self.scope:
+			if neighbour.value is predecessor: p = False
+			if neighbour.value is successor: s = False
+		if p and s:
+			if number_of_open_adj < 2: return False
+			if not (l_table[predecessor] and l_table[successor]): return False
+		else if p or s:
+			if not number_of_open_adj: return False
+			if p and not l_table[predecessor]: return False
+			if s and not l_table[successor]: return False
+		return True
 
 class CSP:
-    '''Class for packing up a set of variables into a CSP problem.
-       Contains various utility routines for accessing the problem.
-       The variables of the CSP can be added later or on initialization.
-       The constraints must be added later'''
 
-    def __init__(self, name, variables=[], goal_val):
-        '''create a CSP object. Specify a name (a string) and 
-           optionally a set of variables. Goal_val is the ultimate goal for the 
-           game.'''
+	def __init__(self, name, variables, initial_board):
+		""" (self, str, iterable of variables, lst of lst) -> None
+			Inits the CSP. Initial board is a lst-lst of ints and Nones
+			determining the board's initial config.
+		"""
+		self.name, self.variables, self.board = name, variables, initial_board
+		c_max = self.get_max_val()
+		fixed = self.get_preassigned()
 
-        self.name, self.vars, self.cons = name, [], []
-        self.vars_to_cons = dict()
+		self.val_to_var = {x: None for x i nrange(c_max)}
+		self.lookup_table = {x: True for x in range(c_max)}
 
-        for v in variables:
-            self.add_var(v)
+		# Set both dictionaries
+		for val in self.lookup_table:
+			result = [(v, pos) for v, pos in fixed if v == val]
 
-		# Lookup table constraints - stores whether key has been used at some point
-		self.lookup_table = {x: False for x in range(goal_val)}
-		lookup_check = lambda : all(v is True for v in self.lookup_table.values())
-		self.add_constraint(Constraint("All nums used", variables, lookup_check))
+			if len(result):
+				pos = result[1][1]
+				self.lookup_table[val] = False
+				self.variables[pos].assign(val)
+				self.variables[pos].fixed = True
+				self.val_to_var[val] = self.variables[pos]
 
-    def add_var(self,v):
-        '''Add variable object to CSP while setting up an index
-           to obtain the constraints over this variable'''
-        if not type(v) is Variable:
-            print("Trying to add non variable ", v, " to CSP object")
-        elif v in self.vars_to_cons:
-            print("Trying to add variable ", v, " to CSP object that already has it")
-        else:
-            self.vars.append(v)
-            self.vars_to_cons[v] = []
+		# Make backups for quicker restores
+		self._lookup_table = deepcopy(self.lookup_table)
+		self._val_to_var = deepcopy(self.val_to_var)
 
-    def add_constraint(self,c):
-        '''Add constraint to CSP. Note that all variables in the 
-           constraints scope must already have been added to the CSP'''
-        if not type(c) is Constraint:
-            print("Trying to add non constraint ", c, " to CSP object")
-        else:
-            for v in c.scope:
-                if not v in self.vars_to_cons:
-                    print("Trying to add constraint ", c, " with unknown variables to CSP object")
-                    return
-                self.vars_to_cons[v].append(c)
-            self.cons.append(c)
+	def check_done(self):
+		""" (self) -> Bool
+			Determines whether the game is over.
+		"""
+		return True not in [x for x in self.lookup_table.values()]
 
-    def get_all_cons(self):
-        '''return list of all constraints in the CSP'''
-        return self.cons
-        
-    def get_cons_with_var(self, var):
-        '''return list of constraints that include var in their scope'''
-        return list(self.vars_to_cons[var])
+	def get_max_val(self):
+		""" (self) -> None
+			Returns the largest value on the board.
+			This is always predefined.
+		"""
+		return len(flatten(self.board))
 
-    def get_all_vars(self):
-        '''return list of variables in the CSP'''
-        return list(self.vars)
+	def get_preassigned(self):
+		""" (self) -> lst of tuples
+			Gets all values (and their indices) fixed into the board.
+		"""
+		return [(y, x) for x, y in enumerate(flatten(self.board)) if type(y) == int]
 
-    def print_all(self):
-        print("CSP", self.name)
-        print("   Variables = ", self.vars)
-        print("   Constraints = ", self.cons)
+	def restore_vars(self):
+		""" Restores the initial state of all variables """ 
+		# Restore from backups, re-init vars
+		self.lookup_table = deepcopy(self._lookup_table)
+		self.val_to_var = deepcopy(self._val_to_var)
 
-    def print_soln(self):
-        print("CSP", self.name, " Assignments = ")
-        for v in self.vars:
-            print(v, " = ", v.get_assigned_value(), "    ", end='')
-        print("")
+		for var in self.variables():
+			var.l_table = self.lookup_table
+			var.v_to_var = self.val_to_var
+			var.unassign()
 
-########################################################
-# Backtracking Routine                                 #
-########################################################
+def flatten(board):
+	""" (lst of lst) -> lst
+		Flattens a list of lists into a single list.
+	"""
+	return [item for l in board for item in l]
 
-class BT:
-    '''use a class to encapsulate things like statistics
-       and bookeeping for pruning/unpruning variabel domains
-       To use backtracking routine make one of these objects
-       passing the CSP as a parameter. Then you can invoke
-       that objects's bt_search routine with the right
-       kind or propagator function to obtain plain backtracking
-       forward-checking or gac'''
+class Backtracking:
+	""" This class takes a CSP, and then can be used to
+	run a backtracking routine with different propogators. """
 
-    def __init__(self, csp):
-        '''csp == CSP object specifying the CSP to be solved'''
+	def __init__(self, csp):
+		""" (self, CSP) -> None
+			Inits the backtracking routine, sets up stat tracking.
+		"""
+		self.csp = csp
+		self.num_vassigns = 0
+		self.total_prunings = 0
+		self.unasgned_vars = list()
+		self.elapsed = 0
 
-        self.csp = csp
-        self.nDecisions = 0 #nDecisions is the number of variable 
-                            #assignments made during search
-        self.nPrunings  = 0 #nPrunings is the number of value prunings during search
-        unasgn_vars = list() #used to track unassigned variables
-        self.TRACE = False
-        self.runtime = 0
+	def clear_stats(self):
+		""" (self) -> None
+			Resets all stats.
+		"""
+		self.num_vassigns, self.total_prunings, self.elapsed = 0, 0, 0
 
-    def trace_on(self):
-        '''Turn search trace on'''
-        self.TRACE = True
+	def print_stats(self):
+		""" (self) -> None """
+		p1 = "Search made {}".format(self.num_vassigns)
+		p2 " variable assignments and pruned {}".format(self.total_prunings)
+		p3 = " variable values"
+		print(p1 + p2 + p3)
 
-    def trace_off(self):
-        '''Turn search trace off'''
-        self.TRACE = False
+	def restore_values(self, prunings):
+		""" Restore all values that were pruned. """  
+		for var, val in prunings:
+			var.unprune_val(val)
+	
+	def restore_values(self, prunings):
+		""" lst of tuples of var, val -> None
+		Restores all prunings.	
+		"""
+		# Dicks out 
+		[var.unprune_val(val) for var, val in prunings]
+		
+	def bt_search(self, propogator):
+		""" Backtrack like a mufucka """
+		self.clear_stats()
+		stime = time.process_time()
 
-        
-    def clear_stats(self):
-        '''Initialize counters'''
-        self.nDecisions = 0
-        self.nPrunings = 0
-        self.runtime = 0
+		self.csp.restore_vars()
 
-    def print_stats(self):
-        print("Search made {} variable assignments and pruned {} variable values".format(
-            self.nDecisions, self.nPrunings))
+		self.unasgn_vars = [var for var in self.csp.variables if var.val is None]
 
-    def restoreValues(self,prunings):
-        '''Restore list of values to variable domains
-           each item in prunings is a pair (var, val)'''
-        for var, val in prunings:
-            var.unprune_value(val)
+		status, prunings = propagator(self.csp)
+		self.total_prunings += prunings
 
-    def restore_all_variable_domains(self):
-        '''Reinitialize all variable domains'''
-        for var in self.csp.vars:
-            if var.is_assigned():
-                var.unassign()
-            var.restore_curdom()
+		if status == False:
+			print("Propogator detected an error at the current root.")
+		else:
+			status = self.bt_Recurse(propogator, 1)
 
-    def extractMRVvar(self):
-        '''Remove variable with minimum sized cur domain from list of
-           unassigned vars. Would be faster to use heap...but this is
-           not production code.
-        '''
+		self.restore_values(prunings)
 
-        md = -1
-        mv = None
-        for v in self.unasgn_vars:
-            if md < 0:
-                md = v.cur_domain_size()
-                mv = v
-            elif v.cur_domain_size() < md:
-                md = v.cur_domain_size()
-                mv = v
-        self.unasgn_vars.remove(mv)
-        return mv
+		print("Solved!") if status else print("Shit..")
 
-    def restoreUnasgnVar(self, var):
-        '''Add variable back to list of unassigned vars'''
-        self.unasgn_vars.append(var)
-        
-    def bt_search(self,propagator):
-        '''Try to solve the CSP using specified propagator routine
+		self.print_stats()
 
-           propagator == a function with the following template
-           propagator(csp, newly_instantiated_variable=None)
-           ==> returns (True/False, [(Variable, Value), (Variable, Value) ...]
+	def bt_recurse(self, propogator, level):
 
-           csp is a CSP object---the propagator can use this to get access
-           to the variables and constraints of the problem.
+		if not self.unasgn_vars:
+			return True
+		else:
+			variables = self.csp.variables()
+			var = min([(len(x.cur_dom), x) for x in variables if not x.value])
+			self.unasgn_vars.remove(var)
 
-           newly_instaniated_variable is an optional argument. 
-           if newly_instantiated_variable is not None:
-               then newly_instantiated_variable is the most
-               recently assigned variable of the search.
-           else:
-               progator is called before any assignments are made
-               in which case it must decide what processing to do
-               prior to any variables being assigned.
+			for val in var.cur_domain():
+				
+				var.assign(val)
+				self.num_vassigns += 1
+				
+				status, prunings = propogator(self.csp, var)
+				self.total_prunings += len(prunings)
 
-           The propagator returns True/False and a list of (Variable, Value) pairs.
-           Return is False if a deadend has been detected by the propagator.
-             in this case bt_search will backtrack
-           return is true if we can continue.
+				if status:
+					if self.bt_recurse(propogator, level + 1):
+						return True
 
-           The list of variable values pairs are all of the values
-           the propagator pruned (using the variable's prune_value method). 
-           bt_search NEEDS to know this in order to correctly restore these 
-           values when it undoes a variable assignment.
+				# TODO Still need to do this 
+				self.restore_values(prunings)
 
-           NOTE propagator SHOULD NOT prune a value that has already been 
-           pruned! Nor should it prune a value twice'''
+				var.unassign() 
 
-        self.clear_stats()
-        stime = time.process_time()
+			self.unasgn_vars.append(var)
 
-        self.restore_all_variable_domains()
-        
-        self.unasgn_vars = []
-        for v in self.csp.vars:
-            if not v.is_assigned():
-                self.unasgn_vars.append(v)
-
-        status, prunings = propagator(self.csp) #initial propagate no assigned variables.
-        self.nPrunings = self.nPrunings + len(prunings)
-
-        if self.TRACE:
-            print(len(self.unasgn_vars), " unassigned variables at start of search")
-            print("Root Prunings: ", prunings)
-
-        if status == False:
-            print("CSP{} detected contradiction at root".format(
-                self.csp.name))
-        else:
-            status = self.bt_recurse(propagator, 1)   #now do recursive search
-
-
-        self.restoreValues(prunings)
-        if status == False:
-            print("CSP{} unsolved. Has no solutions".format(self.csp.name))
-        if status == True:
-            print("CSP {} solved. CPU Time used = {}".format(self.csp.name,
-                                                             time.process_time() - stime))
-            self.csp.print_soln()
-
-        print("bt_search finished")
-        self.print_stats()
-
-    def bt_recurse(self, propagator, level):
-        '''Return true if found solution. False if still need to search.
-           If top level returns false--> no solution'''
-
-        if self.TRACE:
-            print('  ' * level, "bt_recurse level ", level)
-           
-        if not self.unasgn_vars:
-            #all variables assigned
-            return True
-        else:
-            var = self.extractMRVvar()
-            if self.TRACE:
-                print('  ' * level, "bt_recurse var = ", var)
-
-            for val in var.cur_domain():
-
-                if self.TRACE:
-                    print('  ' * level, "bt_recurse trying", var, "=", val)
-
-                var.assign(val)
-                self.nDecisions = self.nDecisions+1
-
-                status, prunings = propagator(self.csp, var)
-                self.nPrunings = self.nPrunings + len(prunings)
-
-                if self.TRACE:
-                    print('  ' * level, "bt_recurse prop status = ", status)
-                    print('  ' * level, "bt_recurse prop pruned = ", prunings)
-
-                if status:
-                    if self.bt_recurse(propagator, level+1):
-                        return True
-
-                if self.TRACE:
-                    print('  ' * level, "bt_recurse restoring ", prunings)
-                self.restoreValues(prunings)
-                var.unassign()
-
-            self.restoreUnasgnVar(var)
-            return False
+			return False	
 
