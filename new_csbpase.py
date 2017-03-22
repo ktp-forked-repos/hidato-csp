@@ -1,7 +1,10 @@
+import time 
+from copy import deepcopy
+
 class Variable:
 
 	# Lookup table maps vals to Fale if on board else True 
-	def __init__(self, name, lookup_table):
+	def __init__(self, name, lookup_table, val_to_var):
 		""" (self, str, dict int:bool) -> None 
 			Inits the variable.	The lookup table is a
 			global table of possible vals for all variables 
@@ -10,6 +13,9 @@ class Variable:
 		self.name = name
 		self.value = None
 		self.l_table = lookup_table
+		self.v_to_var = val_to_var
+		self.cur_dom = get_curdom()
+		self.fixed = False
 
 	def get_curdom(self):
 		""" (self) -> None 
@@ -24,6 +30,7 @@ class Variable:
 		if self.l_table[val]:
 			self.value = val
 			self.l_table[val] = False
+			self.v_to_var[val] = self
 		else:
 			return False
 	
@@ -32,8 +39,20 @@ class Variable:
 			Unassigns the current value and marks it free
 			in the lookup table.
 		"""
-		self.l_table[self.value] = True
-		self.value = None
+		if not self.fixed():
+			self.v_to_var[self.value] = None
+			self.l_table[self.value] = True
+			self.value = None
+	
+	def prune_val(self, value):
+		""" (self, int) -> None
+		Removes value from the vars curdom. 
+		"""
+		self.cur_dom.remove(value)
+		
+	def unprune_val(self, value):
+		""" Undoes the last thing. """
+		self.cur_dom.append(value)
 
 class Constraint: 
 
@@ -68,6 +87,7 @@ class CSP:
 		self.val_to_var = {x: None for x i nrange(c_max)}
 		self.lookup_table = {x: True for x in range(c_max)}
 
+		# Set both dictionaries
 		for val in self.lookup_table:
 			result = [(v, pos) for v, pos in fixed if v == val]
 
@@ -75,7 +95,12 @@ class CSP:
 				pos = result[1][1]
 				self.lookup_table[val] = False
 				self.variables[pos].assign(val)
+				self.variables[pos].fixed = True
 				self.val_to_var[val] = self.variables[pos]
+
+		# Make backups for quicker restores
+		self._lookup_table = deepcopy(self.lookup_table)
+		self._val_to_var = deepcopy(self.val_to_var)
 
 	def check_done(self):
 		""" (self) -> Bool 
@@ -96,6 +121,16 @@ class CSP:
 		"""
 		return [(y, x) for x, y in enumerate(flatten(self.board)) if type(y) == int]
 
+	def restore_vars(self):
+		""" Restores the initial state of all variables """ 
+		# Restore from backups, re-init vars
+		self.lookup_table = deepcopy(self._lookup_table)
+		self.val_to_var = deepcopy(self._val_to_var)
+
+		for var in self.variables():
+			var.l_table = self.lookup_table
+			var.v_to_var = self.val_to_var
+			var.unassign()
 
 def flatten(board):
 	""" (lst of lst) -> lst
@@ -132,4 +167,18 @@ class Backtracking:
 		
 	def restore_values(self, prunings):
 		""" Restore all values that were pruned. """  
-		pass
+		for var, val in prunings:
+			var.unprune_val(val)
+	
+	def restore_all_variables_domains(self):
+		
+
+	def bt_search(self, propogator):
+		""" Backtrack like a mufucka """
+		self.clear_stats()
+		stime = time.process_time()
+
+		self.csp.restore_vars()
+
+		self.unasgn_Vars = [var for var in self.csp.variables if var.val is None]
+
