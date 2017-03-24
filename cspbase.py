@@ -80,11 +80,20 @@ class Constraint:
 		if p and s:
 			if number_of_open_adj < 2: return False
 			if not (l_table[predecessor] and l_table[successor]): return False
-		else if p or s:
+		elif p or s:
 			if not number_of_open_adj: return False
 			if p and not l_table[predecessor]: return False
 			if s and not l_table[successor]: return False
 		return True
+
+	def has_support(self, var, val):
+		""" (self, Variable, int) -> Bool
+		Returns True if var can support val under the constraint,
+		False otherwise.
+		"""
+		# Dicks out
+		var.assign(val); evaluated = self.check(); var.unassign(val)
+		return evaluated
 
     def get_unasgn_vars(self):
         """ (self) -> list of var
@@ -101,7 +110,7 @@ class Constraint:
 class CSP:
 
 	def __init__(self, name, variables, initial_board, constraints):
-		""" (self, str, iterable of variables, lst of lst) -> None
+		""" (self, str, iterable of variables, lst of lst, lst) -> None
 			Inits the CSP. Initial board is a lst-lst of ints and Nones
 			determining the board's initial config.
 		"""
