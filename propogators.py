@@ -7,9 +7,9 @@ def prop_BT(csp, newVar=None):
     for c in csp.get_cons_with_var(newVar):
         if c.get_n_unasgn() == 0:
             vals = []
-            vars = c.get_scope()
+            vars = c.scope
             for var in vars:
-                vals.append(var.get_assigned_value())
+                vals.append(var.value)
             if not c.check(vals):
                 return False, []
     return True, []
@@ -29,11 +29,11 @@ def prop_FC(csp, newVar=None):
 
     for constraint in unaries:
         var = constraint.get_unasgn_vars()[0]
-        for val in var.cur_domain():
+        for val in var.get_curdom():
             if not constraint.has_support(var, val):
                 pruned.append((var, val))
                 var.prune_value(val)
-        if var.cur_domain_size() == 0:
+        if not len(var.get_curdom()):
             return False, pruned
 
     return True, pruned
@@ -48,13 +48,13 @@ def prop_GAC(csp, newVar=None):
 
     while constraints:
         constraint = constraints.pop(0)
-        for var in constraint.get_scope():
-            for val in var.cur_domain():
+        for var in constraint.scope:
+            for val in var.get_curdom():
                 if not constraint.has_support(var, val):
                     pruned.append((var, val))
                     var.prune_value(val)
 
-                    if not var.cur_domain_size():
+                    if not len(var.get_curdom()):
                         return False, pruned # Deadlock
                     else:
                         var_constraints = csp.get_cons_with_var(var)

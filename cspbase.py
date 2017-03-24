@@ -93,6 +93,17 @@ class Constraint:
                 return False
         return True
 
+        def has_support(self, var, val):
+            """ (self, Variable, int) -> Bool
+            Returns True if var can support val under the constraint,
+            False otherwise.
+            """
+            # Dicks out
+            var.assign(val)
+            evaluated = self.check()
+            var.unassign(val)
+            return evaluated
+
     def get_unasgn_vars(self):
         """ (self) -> list of var
             Returns all unassigned variables.
@@ -114,10 +125,13 @@ class CSP:
         """
         self.name, self.variables, self.board = name, variables, initial_board
         self.constraints = constraints
+
         c_max = self.get_max_val()
         fixed = self.get_preassigned()
+
         self.val_to_var = {x: None for x in range(c_max)}
         self.lookup_table = {x: True for x in range(c_max)}
+
         # Set both dictionaries
         for val in self.lookup_table:
             result = [(v, pos) for v, pos in fixed if v == val]
@@ -127,6 +141,7 @@ class CSP:
                 self.variables[pos].assign(val)
                 self.variables[pos].fixed = True
                 self.val_to_var[val] = self.variables[pos]
+                
         # Make backups for quicker restores
         self._lookup_table = deepcopy(self.lookup_table)
         self._val_to_var = deepcopy(self.val_to_var)
