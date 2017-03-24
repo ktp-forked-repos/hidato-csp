@@ -9,7 +9,7 @@ def prop_BT(csp, newVar=None):
             vals = []
             vars = c.scope
             for var in vars:
-                vals.append(var.get_assigned_value())
+                vals.append(var.value)
             if not c.check(vals):
                 return False, []
     return True, []
