@@ -1,11 +1,11 @@
-import time 
+import time
 from copy import deepcopy
 
 class Variable:
 
-	# Lookup table maps vals to Fale if on board else True 
+	# Lookup table maps vals to Fale if on board else True
 	def __init__(self, name, lookup_table, val_to_var):
-		""" (self, str, dict int:bool) -> None 
+		""" (self, str, dict int:bool) -> None
 			Inits the variable.	The lookup table is a
 			global table of possible vals for all variables
 			in the game, storing whether they're available.
@@ -43,13 +43,13 @@ class Variable:
 			self.v_to_var[self.value] = None
 			self.l_table[self.value] = True
 			self.value = None
-	
+
 	def prune_val(self, value):
 		""" (self, int) -> None
-		Removes value from the vars curdom. 
+		Removes value from the vars curdom.
 		"""
 		self.cur_dom.remove(value)
-		
+
 	def unprune_val(self, value):
 		""" Undoes the last thing. """
 		self.cur_dom.append(value)
@@ -134,7 +134,7 @@ class CSP:
 		return [(y, x) for x, y in enumerate(flatten(self.board)) if type(y) == int]
 
 	def restore_vars(self):
-		""" Restores the initial state of all variables """ 
+		""" Restores the initial state of all variables """
 		# Restore from backups, re-init vars
 		self.lookup_table = deepcopy(self._lookup_table)
 		self.val_to_var = deepcopy(self._val_to_var)
@@ -178,17 +178,17 @@ class Backtracking:
 		print(p1 + p2 + p3)
 
 	def restore_values(self, prunings):
-		""" Restore all values that were pruned. """  
+		""" Restore all values that were pruned. """
 		for var, val in prunings:
 			var.unprune_val(val)
-	
+
 	def restore_values(self, prunings):
 		""" lst of tuples of var, val -> None
-		Restores all prunings.	
+		Restores all prunings.
 		"""
-		# Dicks out 
+		# Dicks out
 		[var.unprune_val(val) for var, val in prunings]
-		
+
 	def bt_search(self, propogator):
 		""" Backtrack like a mufucka """
 		self.clear_stats()
@@ -222,10 +222,10 @@ class Backtracking:
 			self.unasgn_vars.remove(var)
 
 			for val in var.cur_domain():
-				
+
 				var.assign(val)
 				self.num_vassigns += 1
-				
+
 				status, prunings = propogator(self.csp, var)
 				self.total_prunings += len(prunings)
 
@@ -233,12 +233,11 @@ class Backtracking:
 					if self.bt_recurse(propogator, level + 1):
 						return True
 
-				# TODO Still need to do this 
+				# TODO Still need to do this
 				self.restore_values(prunings)
 
-				var.unassign() 
+				var.unassign()
 
 			self.unasgn_vars.append(var)
 
-			return False	
-
+			return False
