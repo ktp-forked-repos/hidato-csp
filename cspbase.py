@@ -1,5 +1,6 @@
 import time 
 from copy import deepcopy
+from tools import flatten
 
 class Variable:
 
@@ -85,14 +86,28 @@ class Constraint:
 			if s and not l_table[successor]: return False
 		return True
 
+    def get_unasgn_vars(self):
+        """ (self) -> list of var
+        Returns all unassigned variables.
+        """
+        return [var for var in self.scope if var.value is not None]
+
+    def get_n_unasgn(self):
+        """ (self) -> int
+        Returns the number of unassigned variables
+        """
+        return len(self.get_unasgn_vars())
+
 class CSP:
 
-	def __init__(self, name, variables, initial_board):
+	def __init__(self, name, variables, initial_board, constraints):
 		""" (self, str, iterable of variables, lst of lst) -> None
 			Inits the CSP. Initial board is a lst-lst of ints and Nones
 			determining the board's initial config.
 		"""
 		self.name, self.variables, self.board = name, variables, initial_board
+        self.constraints = constraints 
+
 		c_max = self.get_max_val()
 		fixed = self.get_preassigned()
 
@@ -113,6 +128,18 @@ class CSP:
 		# Make backups for quicker restores
 		self._lookup_table = deepcopy(self.lookup_table)
 		self._val_to_var = deepcopy(self.val_to_var)
+
+    def get_cons_with_var(self, var):
+        """ (self, Variable) -> lst of Variable
+            Returns a list of constraints with var in their scope.
+        """
+        return [c for c in self.constraints if var in c.scope]
+
+    def get_all_cons(self):
+        """ (self) -> list of Constraint
+            Returns all constraints.
+        """
+        return self.constraints
 
 	def check_done(self):
 		""" (self) -> Bool
