@@ -1,7 +1,7 @@
 def prop_BT(csp, newVar=None):
-    '''Do plain backtracking propagation. That is, do no 
+    '''Do plain backtracking propagation. That is, do no
     propagation at all. Just check fully instantiated constraints'''
-    
+
     if not newVar:
         return True, []
     for c in csp.get_cons_with_var(newVar):
@@ -15,12 +15,18 @@ def prop_BT(csp, newVar=None):
     return True, []
 
 def prop_FC(csp, newVar=None):
-    '''Do forward checking. That is check constraints with 
-       only one uninstantiated variable. Remember to keep 
+    '''Do forward checking. That is check constraints with
+       only one uninstantiated variable. Remember to keep
        track of all pruned variable,value pairs and return '''
 
-    # Pairs of (var, val) to be pruned, val in Dom(var) 
+    # Pairs of (var, val) to be pruned, val in Dom(var)
     pruned = []
+
+    print ('\n', 'csp state:')
+    for row in csp.board:
+        print([x.value for x in row])
+    print('ltable', csp.lookup_table, '\n')
+
 
     if newVar:
         unaries = filter(lambda x: x.get_n_unasgn() == 1, csp.get_cons_with_var(newVar))
@@ -29,17 +35,19 @@ def prop_FC(csp, newVar=None):
 
     for constraint in unaries:
         var = constraint.get_unasgn_vars()[0]
-        for val in var.get_curdom():
+        print(var)
+        for val in var.cur_dom:
+            print('val', val, 'var', var, 'support?', constraint.has_support(var, val))
             if not constraint.has_support(var, val):
                 pruned.append((var, val))
                 var.prune_value(val)
-        if not len(var.get_curdom()):
+        if not len(var.cur_dom):
             return False, pruned
 
     return True, pruned
 
 def prop_GAC(csp, newVar=None):
-    '''Do GAC propagation. If newVar is None we do initial GAC enforce 
+    '''Do GAC propagation. If newVar is None we do initial GAC enforce
        processing all constraints. Otherwise we do GAC enforce with
        constraints containing newVar on GAC Queue'''
 
@@ -49,12 +57,12 @@ def prop_GAC(csp, newVar=None):
     while constraints:
         constraint = constraints.pop(0)
         for var in constraint.scope:
-            for val in var.get_curdom():
+            for val in var.cur_dom:
                 if not constraint.has_support(var, val):
                     pruned.append((var, val))
                     var.prune_value(val)
 
-                    if not len(var.get_curdom()):
+                    if not len(var.cur_dom):
                         return False, pruned # Deadlock
                     else:
                         var_constraints = csp.get_cons_with_var(var)
