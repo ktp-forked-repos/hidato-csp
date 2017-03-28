@@ -48,7 +48,7 @@ if __name__ == "__main__":
 
     b1 = [
         [5, None, 2],
-        [6, 1, None],
+        [None, 1, None],
         [7, None, 9],
     ]
 

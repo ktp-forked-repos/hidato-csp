@@ -27,14 +27,24 @@ def prop_FC(csp, newVar=None):
     else:
         unaries = filter(lambda x: x.get_n_unasgn() == 1, csp.get_all_cons())
 
-    for constraint in unaries:
-        var = constraint.get_unasgn_vars()[0]
-        for val in var.cur_dom:
-            if not constraint.has_support(var, val):
-                pruned.append((var, val))
-                var.prune_value(val)
-        if not len(var.cur_dom):
-            return False, pruned
+    for constraint in csp.get_all_cons():
+        if len(constraint.get_unasgn_vars()) is not 0:
+            var = constraint.get_unasgn_vars()[0]
+            for val in var.cur_dom:
+                if not constraint.has_support(var, val):
+                    pruned.append((var, val))
+                    var.prune_value(val)
+            if not len(var.cur_dom):
+                return False, pruned
+
+    # for constraint in unaries:
+    #     var = constraint.get_unasgn_vars()[0]
+    #     for val in var.cur_dom:
+    #         if not constraint.has_support(var, val):
+    #             pruned.append((var, val))
+    #             var.prune_value(val)
+    #     if not len(var.cur_dom):
+    #         return False, pruned
 
     return True, pruned
 
