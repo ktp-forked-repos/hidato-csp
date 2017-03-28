@@ -3,19 +3,6 @@ from propogators import *
 import ast
 import sys
 
-b1 = [
-    [5, None, 2],
-    [6, 1, None],
-    [7, None, 9],
-]
-
-b2 = [
-    [9, None, None],
-    [7, None, None],
-    [1, None, 5],
-]
-
-
 def print_hidato_soln(var_array):
     for row in var_array:
         print([var.value for var in row])
@@ -25,7 +12,6 @@ def flatten(board):
         Flattens a list of lists into a single list.
     """
     return [item for l in board for item in l]
-
 
 def get_neighbours(x, y, m):
     l = []
@@ -38,10 +24,9 @@ def get_neighbours(x, y, m):
     return l
 
 def hitado_csp_model(initial_board):
-
-    # Set up Variables
     max_val = len(flatten(initial_board))
     lookup_table = {x: True for x in range(1,max_val+1)}
+
     variables = []
     for row_index, row in enumerate(initial_board):
         for col_index, cell in enumerate(row):
@@ -49,7 +34,6 @@ def hitado_csp_model(initial_board):
             variables.append(var)
             initial_board[row_index][col_index] = var
 
-    # Set up Constraints
     constraints = []
     for row_index, row in enumerate(initial_board):
         for col_index, var in enumerate(row):
@@ -60,16 +44,41 @@ def hitado_csp_model(initial_board):
     csp = CSP('My CSP', initial_board, constraints, lookup_table)
     return csp, initial_board
 
-
 if __name__ == "__main__":
+
+    b1 = [
+        [5, None, 2],
+        [6, 1, None],
+        [7, None, 9],
+    ]
+
+    b2 = [
+        [9, None, None],
+        [7, None, None],
+        [1, None, 5],
+    ]
+
     for b in [b1]:
         print("Solving board:")
         for row in b:
             print(row)
+
+        print("=======================================================")
         csp, var_array = hitado_csp_model(b)
         solver = Backtracking(csp)
-        print("=======================================================")
+
         print("FC")
         solver.bt_search(prop_FC)
         print("Solution")
         print_hidato_soln(var_array)
+
+        print("=======================================================")
+        csp, var_array = hitado_csp_model(b)
+        solver = Backtracking(csp)
+
+        print("GAC")
+        solver.bt_search(prop_GAC)
+        print("Solution")
+        print_hidato_soln(var_array)
+        
+

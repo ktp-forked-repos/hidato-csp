@@ -22,12 +22,6 @@ def prop_FC(csp, newVar=None):
     # Pairs of (var, val) to be pruned, val in Dom(var)
     pruned = []
 
-    print ('\n', 'csp state:')
-    for row in csp.board:
-        print([x.value for x in row])
-    print('ltable', csp.lookup_table, '\n')
-
-
     if newVar:
         unaries = filter(lambda x: x.get_n_unasgn() == 1, csp.get_cons_with_var(newVar))
     else:
@@ -35,9 +29,7 @@ def prop_FC(csp, newVar=None):
 
     for constraint in unaries:
         var = constraint.get_unasgn_vars()[0]
-        print(var)
         for val in var.cur_dom:
-            print('val', val, 'var', var, 'support?', constraint.has_support(var, val))
             if not constraint.has_support(var, val):
                 pruned.append((var, val))
                 var.prune_value(val)

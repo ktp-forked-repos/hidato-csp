@@ -58,8 +58,8 @@ class Constraint:
             that the constraint revolves around.
         """
         self.name = name
-        self.scope = scope  # list of vars
-        self.keystone = keystone  # center var
+        self.scope = scope # list of vars
+        self.keystone = keystone # center var
 
     def __repr__(self):
         return self.name
@@ -67,11 +67,11 @@ class Constraint:
     def check(self):
         l_table = self.keystone.l_table
         center = self.keystone.value
+
         if center is None:
             return True
+
         number_of_open_adj = len([x for x in self.scope if x.value is None])
-        print(self.scope)
-        print('adj:',number_of_open_adj)
         if self.keystone.value is 1:
             for neighbour in self.scope:
                 if neighbour.value is 2:
@@ -83,7 +83,7 @@ class Constraint:
             return True
 
         # TODO: FIX THIS SHIT
-        if self.keystone.value is 9:
+        if center is 9:
             for neighbour in self.scope:
                 if neighbour.value is 8:
                     return True
@@ -121,7 +121,6 @@ class Constraint:
         """
         # Dicks out
         var.assign(val)
-        print('has_support', var, val)
         evaluated = self.check()
         var.unassign()
         return evaluated
@@ -138,7 +137,6 @@ class Constraint:
         """
         return len(self.get_unasgn_vars())
 
-
 class CSP:
     def __init__(self, name, initial_board, constraints, lookup_table):
         """ (self, str, lst of lst of variables, lst of constraints) -> None
@@ -152,7 +150,6 @@ class CSP:
         c_max = self.get_max_val()
         fixed = self.get_preassigned()
 
-
         self.val_to_var = {x: None for x in range(1,c_max+1)}
 
         # Set both dictionaries
@@ -165,7 +162,6 @@ class CSP:
                 self.variables[pos].fixed = True
                 self.val_to_var[val] = self.variables[pos]
 
-        print(fixed)
         for var in self.variables:
             for fixed_var, _ in fixed:
                 if not var.fixed:
@@ -285,7 +281,6 @@ class Backtracking:
 
         self.restore_values(prunings)
 
-
         if status:
             print("Solved!")
         else:
@@ -300,6 +295,7 @@ class Backtracking:
             variables = self.csp.variables
             var = min([x for x in variables if not x.value], key = lambda t: len(t.cur_dom))
             self.unasgn_vars.remove(var)
+   
             for val in var.cur_dom:
 
                 var.assign(val)
@@ -311,6 +307,7 @@ class Backtracking:
 
                 if status:
                     if self.bt_recurse(propogator, level + 1):
+                        print(val, 'exiting')
                         return True
 
                 # TODO Still need to do this
