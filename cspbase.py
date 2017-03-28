@@ -295,25 +295,24 @@ class Backtracking:
             variables = self.csp.variables
             var = min([x for x in variables if not x.value], key = lambda t: len(t.cur_dom))
             self.unasgn_vars.remove(var)
-   
+            # TODO: FIX THIS FOR GAC
             for val in var.cur_dom:
+                if self.csp.lookup_table[val]:
+                    var.assign(val)
 
-                var.assign(val)
+                    self.num_vassigns += 1
+                    status, prunings = propogator(self.csp, var)
 
-                self.num_vassigns += 1
-                status, prunings = propogator(self.csp, var)
+                    self.total_prunings += len(prunings)
 
-                self.total_prunings += len(prunings)
+                    if status:
+                        if self.bt_recurse(propogator, level + 1):
+                            return True
 
-                if status:
-                    if self.bt_recurse(propogator, level + 1):
-                        print(val, 'exiting')
-                        return True
+                    # TODO Still need to do this
+                    self.restore_values(prunings)
 
-                # TODO Still need to do this
-                self.restore_values(prunings)
-
-                var.unassign()
+                    var.unassign()
 
             self.unasgn_vars.append(var)
 
