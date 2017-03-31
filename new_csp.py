@@ -30,75 +30,45 @@ class Variable:
         self.cur_dom.append(coord)
 
     def assign(self, coord):
+        # print(self, 'assigns', coord)
+        # for row in self.board:
+        #     print(row)
         self.coord = coord
         self.board[coord[0]][coord[1]] = self
 
     def unassign(self):
+        # print(self, 'unassigns')
         self.board[self.coord[0]][self.coord[1]] = None
         self.coord = None
 
-class Constraint2:
-    def __init__(self, board, x, y):
-        self.board = board
-        self.x = x
-        self.y = y
-
-    def __repr__(self):
-        return 'Con-(' + str(self.x) + ', ' + str(self.y) + ')'
-
-    def check(self):
-        x = self.x
-        y = self.y
-        board_len = len(self.board)*len(self.board[0])
-        if not self.board[x][y]: return True
-        keystone = self.board[x][y].value
-        neighbours = get_neighbours(x, y, self.board)
-        if self.board[x][y].value is 1:
-            return len([x for x in neighbours if x.value is 2]) is 1
-        if self.board[x][y].value is board_len:
-            return len([x for x in neighbours if x and x.value is board_len-1]) is 1
-        free_space = len([x for x in neighbours if x is None])
-        next_to_pre = len([x for x in neighbours if x and x.value is keystone-1]) is 1
-        next_to_suc = len([x for x in neighbours if x and x.value is keystone+1]) is 1
-        if free_space >= 2: return True
-        if free_space is 1 and not next_to_pre and not next_to_suc: return False
-        if free_space is 0 and (not next_to_pre or not next_to_suc): return False
-        return True
-
-    def has_support(self, var, coord):
-        var.coord = coord
-        result = self.check()
-        var.coord = None
-        return result
-
-    def get_unasgn_vars(self):
-        if self.board[self.x][self.y] is None: return []
-        keystone = self.board[self.x][self.y].value
-        return [x for x in get_neighbours(self.x, self.y, self.board) if x and (x.value is keystone-1 or x.value is keystone+1)]
-
-    def get_n_unasgn(self):
-        return len(self.get_unasgn_vars())
+def next_to(coord1, coord2):
+    return abs(coord1[0] - coord2[0]) <= 1 and abs(coord1[1] - coord2[1]) <= 1 and not coord1 == coord2
 
 class Constraint:
-    def __init__(self, start, end):
-        self.start, self.end = start, end
+    def __init__(self, start, middle, end):
+        self.start = start
+        self.middle = middle
+        self.end = end
+        self.scope = [self.start, self.middle, self.end]
 
     def __repr__(self):
-        return 'Con-from-' + str(self.start) + '-to-' + str(self.end)
+        return 'Con-' + str(self.start) + '-' + str(self.middle)+ '-' + str(self.end)
 
     def check(self):
-        if not self.start.coord and not self.end.coord: return True
-        s, e = self.start.coord, self.end.coord
-        return abs(s[0] - e[0]) <= 1 and abs(s[1] - e[1]) <= 1 and not s == e
+        if not self.start.coord or not self.middle.coord or not self.end.coord: return True
+        s, m, e = self.start.coord, self.middle.coord, self.end.coord
+        return next_to(s,m) and next_to(m,e) and s is not e
 
     def has_support(self, var, coord):
-        var.coord = coord
+        oldvar = var.board[coord[0]][coord[1]]
+        var.assign(coord)
         result = self.check()
-        var.coord = None
+        var.unassign()
+        if oldvar: oldvar.assign(coord)
         return result
 
     def get_unasgn_vars(self):
-        return [x for x in [self.start, self.end] if not x.coord]
+        return [x for x in [self.start, self.middle, self.end] if not x.coord]
 
     def get_n_unasgn(self):
         return len(self.get_unasgn_vars())
@@ -120,11 +90,13 @@ class CSP:
                 else:
                     self.variables[cell].coord = (row_index, col_index)
                     self.variables[cell].fixed = True
+                    self.variables[cell].cur_dom = [(row_index, col_index)]
                     self.board[row_index][col_index] = self.variables[cell]
         for i in self.variables:
-            self.variables[i].cur_dom = deepcopy(open_space)
-        for i in range(1, max_val):
-            self.constraints.append(Constraint(self.variables[i], self.variables[i+1]))
+            if not self.variables[i].fixed:
+                self.variables[i].cur_dom = deepcopy(open_space)
+        for i in range(1, max_val-1):
+            self.constraints.append(Constraint(self.variables[i], self.variables[i+1], self.variables[i+2]))
         #
         # for row_index, row in enumerate(board):
         #     for col_index, cell in enumerate(row):
@@ -134,7 +106,7 @@ class CSP:
         self._variables = deepcopy(self.variables)
 
     def get_cons_with_var(self, var):
-        return [c for c in self.constraints if var.value in (c.start.value, c.end.value)]
+        return [c for c in self.constraints if var.value in (c.start.value, c.middle.value, c.end.value)]
 
     def get_all_cons(self):
         return self.constraints
@@ -166,6 +138,7 @@ class Backtracking:
         stime = time.process_time()
         self.unasgn_vars = [v for i,v in self.csp.variables.items() if v.coord is None]
         status, prunings = propagator(self.csp)
+        # print('init prunings', prunings)
         self.total_prunings += len(prunings)
         if status:
             status = self.bt_recurse(propagator, 1)
@@ -179,31 +152,33 @@ class Backtracking:
         # self.print_stats()
 
     def bt_recurse(self, propagator, level):
-        print('BEGINNING A BT_RECURSE -------------------------------------')
+        # print('BEGINNING A BT_RECURSE -------------------------------------')
+        # for i, v in self.csp.variables.items():
+        #     print(v, v.cur_dom)
         if not self.unasgn_vars:
             return True
         else:
             variables = self.csp.variables
             var = min([var for var in self.unasgn_vars if not var.coord], key = lambda t: len(t.cur_dom))
             self.unasgn_vars.remove(var)
-            print(var, 'cur_dom', var.cur_dom)
+            # print(var, 'cur_dom', var.cur_dom)
             for coord in var.cur_dom:
                 var.assign(coord)
-                print(var, 'assigns', coord)
+                # print(var, 'assigns', coord)
                 for vv in self.unasgn_vars:
                     vv.prune(coord)
                 self.num_vassigns += 1
                 status, prunings = propagator(self.csp, var)
-                print('propagator says ', status)
+                # print('propagator says ', status)
                 self.total_prunings += len(prunings)
-                print_hidato_soln(self.csp.board)
-                print()
+                # print_hidato_soln(self.csp.board)
+                # print()
                 if status:
                     if self.bt_recurse(propagator, level + 1):
                         return True
                 self.restore_coords(prunings)
                 var.unassign()
-                print(var, 'unassigns', coord)
+                # print(var, 'unassigns', coord)
                 for v in self.unasgn_vars:
                     v.unprune(coord)
             self.unasgn_vars.append(var)

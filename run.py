@@ -3,9 +3,10 @@ from propogators import *
 import ast
 import sys
 
-def print_hidato_soln(var_array):
-    for row in var_array:
-        print([item.value for item in row])
+def print_hidato_soln(board):
+    print(board)
+    for row in board:
+        print([item.value for item in row if item])
 
 def flatten(board):
     """ (lst of lst) -> lst
@@ -101,7 +102,7 @@ if __name__ == "__main__":
     ]
 
 
-    for b in [b6]:
+    for b in [b1, b2, b3, b4, b5, b6, b7, b8]:
         print("Solving board:")
         for row in b:
             print(row)
@@ -112,12 +113,11 @@ if __name__ == "__main__":
 
         solver.bt_search(prop_FC)
         print_hidato_soln(csp.board)
-        #
+
         # print("=======================================================")
-        # csp, var_array = hitado_csp_model(b)
+        # csp = CSP('Fucking csp', b)
         # solver = Backtracking(csp)
         #
         # print("GAC")
         # solver.bt_search(prop_GAC)
-        # print("Solution")
-        # print_hidato_soln(var_array)
+        # print_hidato_soln(csp.board)
