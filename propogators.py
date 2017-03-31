@@ -22,9 +22,9 @@ def prop_FC(csp, newVar=None):
     # Pairs of (var, val) to be pruned, val in Dom(var)
     pruned = []
 
-    cons = csp.get_cons_with_var(newVar) if newVar else csp.get_all_cons()
+    # cons = csp.get_cons_with_var(newVar) if newVar else csp.get_all_cons()
 
-    for constraint in cons:
+    for constraint in csp.get_all_cons():
         if len(constraint.get_unasgn_vars()) is not 0:
             var = constraint.get_unasgn_vars()[0]
             for val in var.cur_dom:

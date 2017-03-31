@@ -52,6 +52,40 @@ class Variable:
 
 
 class Constraint:
+    def __init__(self, name, lookup, start, end):
+        self.name = name
+        self.lookup = lookup
+        self.start = start
+        self.end = end
+
+    def __repr__(self):
+        return 'Con-from-' + self.start + '-to-' + self.end
+
+    def check(self):
+        if lookup[self.start] or lookup[self.end]: return True
+        return lookup[self.start].is_next_to(lookup[self.end])
+
+    def has_support(self, var, val):
+        var.assign(val)
+        evaluated = self.check()
+        var.unassign()
+        return evaluated
+
+    def get_unasgn_vars(self):
+        """ (self) -> list of var
+            Returns all unassigned variables.
+        """
+        a,b = lookup[self.]
+        return [var for var in self.scope if var.value is None]
+
+    def get_n_unasgn(self):
+        """ (self) -> int
+        Returns the number of unassigned variables
+        """
+        return len(self.get_unasgn_vars())
+
+
+class Constraint1:
     def __init__(self, name, keystone, scope):
         """ (self, str, variable, iterable of variables, fn)
             Inits the constraint. Keystone refers to the stone
@@ -175,8 +209,9 @@ class CSP:
         """ (self, Variable) -> lst of Variable
             Returns a list of constraints with var in their scope.
         """
-        return [c for c in self.constraints if var in c.scope or var is c.keystone]
-
+        result = [c for c in self.constraints if var in c.scope or var is c.keystone]
+        print(var, result)
+        return result
     def get_all_cons(self):
         """ (self) -> list of Constraint
             Returns all constraints.
