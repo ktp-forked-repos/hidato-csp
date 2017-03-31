@@ -48,7 +48,7 @@ if __name__ == "__main__":
 
     b1 = [
         [5, None, 2],
-        [6, 1, None],
+        [None, 1, None],
         [7, None, 9],
     ]
 
@@ -58,7 +58,7 @@ if __name__ == "__main__":
         [1, None, 5],
     ]
 
-    for b in [b1]:
+    for b in [b1, b2]:
         print("Solving board:")
         for row in b:
             print(row)
@@ -80,5 +80,3 @@ if __name__ == "__main__":
         solver.bt_search(prop_GAC)
         print("Solution")
         print_hidato_soln(var_array)
-        
-
