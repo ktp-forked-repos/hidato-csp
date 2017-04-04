@@ -1,0 +1,1 @@
+If we had assigned vars to cells (where cells were the vars), we couldnt try the heuristic of assigning the next unassigned number nearly as easily.
