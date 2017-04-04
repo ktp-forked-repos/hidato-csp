@@ -107,6 +107,21 @@ class CSP:
         self._constraints = deepcopy(self.constraints)
         self._variables = deepcopy(self.variables)
 
+    def verify(self):
+        pos, remaining, cont = 1, len(self.variables) - 1, True 
+        var = self.variables[1]
+
+        while cont:
+            cur, nxt = self.variables[pos], self.variables[pos+1] 
+            if next_to(cur.coord, nxt.coord):
+                cur += 1; remaining -= 1
+                if not remaining:
+                    cont = False
+            else:
+                cont = False
+
+        return "Success" if not remaining else "Failure"
+        
     def get_cons_with_var(self, var):
 
         val = var.value
