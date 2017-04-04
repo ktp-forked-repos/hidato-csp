@@ -7,6 +7,7 @@ from benchmark import benchmark
 from cspbase import *
 from propogators import *
 from hb import *
+from heuristics import *
 
 def print_problem(board):
     for row in board:
@@ -24,19 +25,14 @@ def print_soln(board):
         print()
 
 if __name__ == "__main__":
-    board_db = collections.OrderedDict(sorted(board_db.items()))
-    with open('results.csv', 'w') as csvfile:
-        spamwriter = csv.writer(csvfile, delimiter=',', quotechar='|', quoting=csv.QUOTE_MINIMAL)
-        spamwriter.writerow(['propogator'] + list(board_db.keys()))
-        for propogator in [prop_BT, prop_FC, prop_GAC]:
-            row = [propogator.__name__]
-            for name, b in board_db.items():
-                if (name in bt_safe_boards or not propogator.__name__ is 'prop_BT') and (name in fc_safe_boards or not propogator.__name__ is 'prop_FC') and (name in gac_safe_boards or not propogator.__name__ is 'prop_GAC'):
-                    print('Trying', name)
-                    board = deepcopy(b)
-                    csp = CSP('CSP', board)
-                    solver = Backtracking(csp)
-                    with benchmark() as b:
-                        solver.bt_search(propogator)
-                    row.append(b.time)
-            spamwriter.writerow(row)
+    boards = sys.argv[1:]
+    for board in boards:
+        b = board_db[board]
+        print('Problem Board')
+        print_problem(b)
+        csp = CSP('CSP', b, smallest_cur_dom)
+        solver = Backtracking(csp)
+        with benchmark() as t:
+            solver.bt_search(prop_FC)
+        print('Time:', t.time)
+        print_soln(csp.board)

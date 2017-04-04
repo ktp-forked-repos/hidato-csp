@@ -76,8 +76,8 @@ class Constraint:
 
 class CSP:
 
-    def __init__(self, name, board):
-        self.name, self.board = name, board
+    def __init__(self, name, board, heuristic):
+        self.name, self.board, self.heuristic = name, board, heuristic
         self.constraints = []
         self.variables = {}
 
@@ -124,6 +124,7 @@ class CSP:
 class Backtracking:
     def __init__(self, csp):
         self.csp = csp
+        self.heuristic = csp.heuristic
         self.num_vassigns = 0
         self.total_prunings = 0
         self.unasgned_vars = list()
@@ -160,7 +161,7 @@ class Backtracking:
             return True
         else:
 
-            var = min([var for var in self.unasgn_vars if not var.coord], key = lambda t: len(t.cur_dom))
+            var = min([var for var in self.unasgn_vars if not var.coord], key = self.heuristic)
 
             self.unasgn_vars.remove(var)
 

@@ -1,6 +1,10 @@
-bt_safe_boards = ['a1', 'a2', 'a3', 'a4', 'a5', 'a6', 'a7', 'a8']
-fc_safe_boards = bt_safe_boards + ['b1', 'b2', 'b3', 'b4', 'b5', 'b6', 'b7', 'b8', 'c1', 'c2', 'c3', 'c4', 'c5', 'c6', 'c7', 'c8']
-gac_safe_boards = fc_safe_boards
+a_level = ['a1', 'a2', 'a3', 'a4', 'a5', 'a6', 'a7', 'a8']
+b_level = ['b1', 'b2', 'b3', 'b4', 'b5', 'b6', 'b7', 'b8']
+c_level = ['c1', 'c2', 'c3', 'c4', 'c5', 'c6', 'c7', 'c8']
+d_level = ['d1', 'd2', 'd3', 'd4', 'd5', 'd6', 'd7', 'd8']
+bt_safe_boards = a_level
+fc_safe_boards = a_level + b_level + c_level + d_level
+gac_safe_boards = a_level + b_level + c_level + d_level
 
 board_db = {
     'a1': [
@@ -114,6 +118,70 @@ board_db = {
         [18, None, None, None, 10, 12],
     ],
     'c1': [
+        [33, 32, None, 30, 29, 1],
+        [35, None, None, 28, 17, 2],
+        [36, None, 20, 18, None, None],
+        [None, None, 19, 15, None, None],
+        [None, 22, 10, None, None, None],
+        [23, 9, None, None, None, None]
+    ],
+    'c2': [
+        [16, 17, None, None, None, 22],
+        [None, 14, None, 31, 21, None],
+        [8, None, 32, 12, None, 24],
+        [None, 9, None, 33, None, 25],
+        [4, None, None, None, None, 28],
+        [3, None, 1, 36, None, None]
+    ],
+    'c3': [
+        [None, None, 22, 20, 19, 18],
+        [None, 36, None, None, 15, None],
+        [None, None, 30, None, 14, None],
+        [None, 28, None, 33, None, 12],
+        [3, 1, 6, None, 9, 11],
+        [None, 4, None, 7, None, None]
+    ],
+    'c4': [
+        [21, None, None, None, None, None],
+        [22, None, 35, None, 14, 16],
+        [26, 24, 36, 31, None, 13],
+        [None, None, None, 30, 32, None],
+        [None, 1, 28, 7, 9, None],
+        [2, None, None, None, None, 10]
+    ],
+    'c5': [
+        [None, 29, 30, None, 32, 4],
+        [28, 26, 1, None, 3, None],
+        [25, 23, None, None, None, 8],
+        [None, None, 22, 14, None, 7],
+        [36, None, 15, None, None, None],
+        [None, 16, None, None, None, 11]
+    ],
+    'c6': [
+        [30, 28, None, 36, 1, 3],
+        [31, None, None, 26, None, 2],
+        [32, None, None, None, None, 5],
+        [33, None, 14, 24, None, None],
+        [None, 15, None, None, 8, None],
+        [None, 17, 21, None, 10, None]
+    ],
+    'c7': [
+        [None, None, None, 12, None, None],
+        [31, 27, 11, None, 9, 15],
+        [32, None, None, 8, None, 17],
+        [None, 25, None, 6, 5, None],
+        [34, None, None, None, 19, 20],
+        [1, None, 36, None, 22, None]
+    ],
+    'c8': [
+        [22, None, 25, None, 35, None],
+        [20, 21, None, None, None, 36],
+        [19, None, None, 7, None, None],
+        [None, 18, None, None, 31, 5],
+        [None, 14, 10, 9, None, 4],
+        [13, None, 11, 1, None, None]
+    ],
+    'd1': [
         [None, None, 28, None, 25, 23],
         [None, None, None, None, None, None],
         [None, None, 32, None, None, 1],
@@ -121,7 +189,7 @@ board_db = {
         [None, 11, None, None, 18, None],
         [36, None, None, 13, None, 17],
     ],
-    'c2': [
+    'd2': [
         [None, None, 2, None, None, 30],
         [36, None, None, 1, None, None],
         [5, None, 25, None, 23, None],
@@ -129,7 +197,7 @@ board_db = {
         [None, 12, None, 19, None, 17],
         [None, None, None, None, 18, None],
     ],
-    'c3': [
+    'd3': [
         [None, None, None, 1, None, None],
         [5, 6, None, None, None, 24],
         [None, None, None, None, 31, None],
@@ -137,7 +205,7 @@ board_db = {
         [9, None, 13, None, None, None],
         [None, None, None, None, 17, 36],
     ],
-    'c4': [
+    'd4': [
         [None, 13, None, None, None, None],
         [None, None, None, 31, None, 36],
         [11, None, None, None, None, 35],
@@ -145,7 +213,7 @@ board_db = {
         [5, None, None, None, None, 21],
         [None, None, 3, 1, None, None],
     ],
-    'c5': [
+    'd5': [
         [None, None, None, None, 14, None],
         [None, 26, 25, 18, None, 12],
         [None, None, 36, 17, None, None],
@@ -153,7 +221,7 @@ board_db = {
         [None, None, None, 1, None, 9],
         [None, None, 32, None, None, None],
     ],
-    'c6': [
+    'd6': [
         [None, 3, None, None, 34, None],
         [None, None, None, None, None, None],
         [10, None, None, 1, 36, None],
@@ -161,7 +229,7 @@ board_db = {
         [17, None, None, None, None, None],
         [None, None, None, None, None, None],
     ],
-    'c7': [
+    'd7': [
         [None, None, 15, None, 17, None],
         [None, 9, None, None, 35, None],
         [None, 8, None, 28, None, 36],
@@ -169,7 +237,7 @@ board_db = {
         [6, None, None, None, None, 26],
         [4, 3, None, 1, None, None],
     ],
-    'c8': [
+    'd8': [
         [None, None, None, None, None, 1],
         [30, None, 36, 27, None, 24],
         [None, None, None, 17, None, None],
@@ -179,15 +247,14 @@ board_db = {
     ]
 }
 
-#
-# 'b1': [
+# b1 = [
 #     [None, None, 22, 20, 19, 18],
 #     [None, 36, None, None, 15, None],
 #     [None, None, 30, None, 14, None],
 #     [None, 28, None, 33, None, 12],
 #     [3, 1, 6, None, 9, 11],
 #     [None, 4, None, 7, None, None],
-# ],
+# ]
 # 'c1': [
 #     [61, None, None, None, None, None, None, None, None, None, None, 116],
 #     [None, 63, None, None, 68, None, None, 73, None, None, 118, None],
