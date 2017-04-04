@@ -1,25 +1,20 @@
 from copy import deepcopy
 
 def prop_BT(csp, newVar=None):
-    '''Do plain backtracking propagation. That is, do no
-    propagation at all. Just check fully instantiated constraints'''
 
     if not newVar:
         return True, []
-    for c in csp.get_cons_with_var(newVar):
-        if c.get_n_unasgn() == 0:
+    for constraint in csp.get_cons_with_var(newVar):
+        if constraint.get_n_unasgn() == 0:
             vals = []
-            vars = c.scope
+            vars = constraint.scope
             for var in vars:
                 vals.append(var.value)
-            if not c.check(vals):
+            if not constraint.check():
                 return False, []
     return True, []
 
 def prop_FC(csp, newVar=None):
-    '''Do forward checking. That is check constraints with
-       only one uninstantiated variable. Remember to keep
-       track of all pruned variable,value pairs and return '''
 
     pruned = []
     if newVar:
@@ -39,9 +34,6 @@ def prop_FC(csp, newVar=None):
     return True, pruned
 
 def prop_GAC(csp, newVar=None):
-    '''Do GAC propagation. If newVar is None we do initial GAC enforce
-       processing all constraints. Otherwise we do GAC enforce with
-       constraints containing newVar on GAC Queue'''
 
     pruned = []
     constraints = csp.get_all_cons() if not newVar else csp.get_cons_with_var(newVar)
@@ -56,10 +48,9 @@ def prop_GAC(csp, newVar=None):
                         pruned.append((var, coord))
 
                         if not len(var.cur_dom):
-                            return False, list(set(pruned)) # Deadlock
+                            return False, list(set(pruned))
                         else:
                             for v_cons in csp.get_cons_with_var(var):
                                 if v_cons not in constraints:
                                     constraints.append(v_cons)
-
     return True, pruned
