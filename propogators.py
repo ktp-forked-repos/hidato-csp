@@ -1,3 +1,5 @@
+from copy import deepcopy
+
 def prop_BT(csp, newVar=None):
     '''Do plain backtracking propagation. That is, do no
     propagation at all. Just check fully instantiated constraints'''
@@ -19,7 +21,6 @@ def prop_FC(csp, newVar=None):
        only one uninstantiated variable. Remember to keep
        track of all pruned variable,value pairs and return '''
 
-    # print('prop looking at', newVar)
     pruned = []
     if newVar:
         cons = [x for x in csp.get_cons_with_var(newVar) if x.get_n_unasgn() is 1]
@@ -31,13 +32,11 @@ def prop_FC(csp, newVar=None):
         var = constraint.get_unasgn_vars()[0]
         # print('does', constraint, 'support', var)
         # print(var, 'curdom', var.cur_dom)
-        rem = []
-        for coord in var.cur_dom:
+        for coord in deepcopy(var.cur_dom):
             if not constraint.has_support(var, coord):
+                var.prune(coord)
                 pruned.append((var, coord))
-                rem.append(coord)
-        for coord in rem:
-            var.prune(coord)
+
         # print('pruned:', pruned)
         # print('var.cur_dom', var.cur_dom)
         if len(var.cur_dom) is 0:
@@ -54,27 +53,18 @@ def prop_GAC(csp, newVar=None):
 
     while constraints:
         constraint = constraints.pop(0)
-        print('dealing with con', constraint)
-        for var in constraint.scope:
-            rem = []
-            for coord in var.cur_dom:
+        for var in constraint.scope[:]:
+            for coord in var.cur_dom[:]:
                 if not var.fixed:
-                    print('looking at', constraint, 'supporting', var, 'at', coord)
                     if not constraint.has_support(var, coord):
-                        print('NO SUP')
+                        var.prune(coord)
                         pruned.append((var, coord))
-                        # var.prune(coord)
-                        rem.append(coord)
 
                         if not len(var.cur_dom):
-                            return False, pruned # Deadlock
+                            return False, list(set(pruned)) # Deadlock
                         else:
-                            var_constraints = csp.get_cons_with_var(var)
-                            for v_cons in var_constraints:
+                            for v_cons in csp.get_cons_with_var(var):
                                 if v_cons not in constraints:
                                     constraints.append(v_cons)
-            for thing in rem:
-                var.prune(thing)
-
 
     return True, pruned

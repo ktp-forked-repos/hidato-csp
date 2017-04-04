@@ -11,6 +11,10 @@ def get_neighbours(x, y, m):
             l.append(m[x+xx][y+yy])
     return l
 
+def next_to(coord1, coord2):
+    val = abs(coord1[0] - coord2[0]) <= 1 and abs(coord1[1] - coord2[1]) <= 1 and not coord1 == coord2
+    return val
+
 class Variable:
     def __init__(self, name, value, board):
         self.name = name
@@ -25,92 +29,104 @@ class Variable:
 
     def prune(self, coord):
         if coord in self.cur_dom: self.cur_dom.remove(coord)
+        print(self.cur_dom)
 
     def unprune(self, coord):
-        self.cur_dom.append(coord)
+        if coord not in self.cur_dom: self.cur_dom.append(coord)
 
     def assign(self, coord):
-        # print(self, 'assigns', coord)
-        # for row in self.board:
-        #     print(row)
+        self.fixed = True
+        
+        if self.board[coord[0]][coord[1]]:
+            print(self.board)
+            print(self, coord, "Error: overplacement.")
+            exit()
         self.coord = coord
         self.board[coord[0]][coord[1]] = self
 
     def unassign(self):
-        # print(self, 'unassigns')
+        self.fixed = False
         self.board[self.coord[0]][self.coord[1]] = None
         self.coord = None
-
-def next_to(coord1, coord2):
-    return abs(coord1[0] - coord2[0]) <= 1 and abs(coord1[1] - coord2[1]) <= 1 and not coord1 == coord2
 
 class Constraint:
     def __init__(self, start, middle, end):
         self.start = start
         self.middle = middle
         self.end = end
-        self.scope = [self.start, self.middle, self.end]
+        self.scope = (self.start, self.middle, self.end)
 
     def __repr__(self):
         return 'Con-' + str(self.start) + '-' + str(self.middle)+ '-' + str(self.end)
 
     def check(self):
-        if not self.start.coord or not self.middle.coord or not self.end.coord: return True
+        
+        if not (self.start.coord and self.middle.coord and self.end.coord): return True
         s, m, e = self.start.coord, self.middle.coord, self.end.coord
-        return next_to(s,m) and next_to(m,e) and s is not e
+
+        return next_to(s,m) and next_to(m,e) and s != e and s != m and m != e
 
     def has_support(self, var, coord):
-        oldvar = var.board[coord[0]][coord[1]]
+
         var.assign(coord)
         result = self.check()
         var.unassign()
-        if oldvar: oldvar.assign(coord)
+
         return result
 
     def get_unasgn_vars(self):
-        return [x for x in [self.start, self.middle, self.end] if not x.coord]
+        return [x for x in self.scope if not x.coord]
 
     def get_n_unasgn(self):
         return len(self.get_unasgn_vars())
 
-
 class CSP:
+
     def __init__(self, name, board):
-        self.name, self.board = name, deepcopy(board)
+        self.name, self.board = name, board
         self.constraints = []
         self.variables = {}
+
         open_space = []
         max_val = len(board)*len(board[0])
+
         for i in range(1, max_val + 1):
-            self.variables[i] = Variable('Var-' + str(i), i, copy(self.board))
+            self.variables[i] = Variable('Var-' + str(i), i, self.board)
+
         for row_index, row in enumerate(board):
             for col_index, cell in enumerate(row):
-                if cell is None:
+                if cell == None:
                     open_space.append((row_index, col_index))
                 else:
                     self.variables[cell].coord = (row_index, col_index)
                     self.variables[cell].fixed = True
                     self.variables[cell].cur_dom = [(row_index, col_index)]
                     self.board[row_index][col_index] = self.variables[cell]
+
         for i in self.variables:
             if not self.variables[i].fixed:
-                self.variables[i].cur_dom = deepcopy(open_space)
+                self.variables[i].cur_dom = open_space[:]
+
         for i in range(1, max_val-1):
             self.constraints.append(Constraint(self.variables[i], self.variables[i+1], self.variables[i+2]))
-        #
-        # for row_index, row in enumerate(board):
-        #     for col_index, cell in enumerate(row):
-        #         self.constraints.append(Constraint2(self.board, row_index, col_index))
 
         self._constraints = deepcopy(self.constraints)
         self._variables = deepcopy(self.variables)
 
     def get_cons_with_var(self, var):
-        return [c for c in self.constraints if var.value in (c.start.value, c.middle.value, c.end.value)]
+
+        val = var.value
+
+        ret = []
+        for constraint in self.constraints: 
+            if var in constraint.scope:
+                ret.append(constraint)
+
+        return ret[:]
+ # [c for c in self.constraints if var.value in (c.start.value, c.middle.value, c.end.value)]
 
     def get_all_cons(self):
-        return self.constraints
-
+        return self.constraints[:]
 
 class Backtracking:
     def __init__(self, csp):
@@ -136,52 +152,56 @@ class Backtracking:
     def bt_search(self, propagator):
         self.clear_stats()
         stime = time.process_time()
-        self.unasgn_vars = [v for i,v in self.csp.variables.items() if v.coord is None]
+        self.unasgn_vars = [v for v in self.csp.variables.values() if v.coord is None]
+
         status, prunings = propagator(self.csp)
-        # print('init prunings', prunings)
+
         self.total_prunings += len(prunings)
         if status:
             status = self.bt_recurse(propagator, 1)
         else:
             print("Propogator detected an error at the current root.")
+
         self.restore_coords(prunings)
         if status:
             print('Solved!')
         else:
             print('Not Solved :(')
-        # self.print_stats()
 
     def bt_recurse(self, propagator, level):
-        # print('BEGINNING A BT_RECURSE -------------------------------------')
-        # for i, v in self.csp.variables.items():
-        #     print(v, v.cur_dom)
         if not self.unasgn_vars:
             return True
         else:
-            variables = self.csp.variables
+
             var = min([var for var in self.unasgn_vars if not var.coord], key = lambda t: len(t.cur_dom))
+
             self.unasgn_vars.remove(var)
-            # print(var, 'cur_dom', var.cur_dom)
+
             for coord in var.cur_dom:
                 var.assign(coord)
-                # print(var, 'assigns', coord)
+                print("Assigned ", var, coord)
+                prunes = []
+
                 for vv in self.unasgn_vars:
+                    prunes.append((vv, coord))
                     vv.prune(coord)
+
                 self.num_vassigns += 1
                 status, prunings = propagator(self.csp, var)
-                # print('propagator says ', status)
+
                 self.total_prunings += len(prunings)
-                # print_hidato_soln(self.csp.board)
-                # print()
+
                 if status:
                     if self.bt_recurse(propagator, level + 1):
                         return True
-                self.restore_coords(prunings)
+
+                self.restore_coords(prunings + prunes)
+ 
                 var.unassign()
-                # print(var, 'unassigns', coord)
-                for v in self.unasgn_vars:
-                    v.unprune(coord)
+                print(var)
+
             self.unasgn_vars.append(var)
+
             return False
 
 def print_hidato_soln(var_array):

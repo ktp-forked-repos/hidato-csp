@@ -50,7 +50,7 @@ if __name__ == "__main__":
     b1 = [
         [5, None, 2],
         [None, 1, None],
-        [7, None, 9],
+        [7, 8, 9],
     ]
 
     b2 = [
@@ -102,22 +102,24 @@ if __name__ == "__main__":
     ]
 
 
-    for b in [b1, b2, b3, b4, b5, b6, b7, b8]:
+    for b in [b1]:
         print("Solving board:")
         for row in b:
             print(row)
 
+        '''        
         print("=======================================================")
         csp = CSP('Fucking csp', b)
         solver = Backtracking(csp)
 
         solver.bt_search(prop_FC)
         print_hidato_soln(csp.board)
+        '''
 
-        # print("=======================================================")
-        # csp = CSP('Fucking csp', b)
-        # solver = Backtracking(csp)
-        #
-        # print("GAC")
-        # solver.bt_search(prop_GAC)
-        # print_hidato_soln(csp.board)
+        print("=======================================================")
+        csp = CSP('Fucking csp', b)
+        solver = Backtracking(csp)
+        
+        print("GAC")
+        solver.bt_search(prop_GAC)
+        print_hidato_soln(csp.board)
