@@ -26,19 +26,14 @@ def prop_FC(csp, newVar=None):
         cons = [x for x in csp.get_cons_with_var(newVar) if x.get_n_unasgn() is 1]
     else:
         cons = [x for x in csp.get_all_cons() if x.get_n_unasgn() is 1]
-    # print('prop using', cons)
 
     for constraint in cons:
         var = constraint.get_unasgn_vars()[0]
-        # print('does', constraint, 'support', var)
-        # print(var, 'curdom', var.cur_dom)
         for coord in deepcopy(var.cur_dom):
             if not constraint.has_support(var, coord):
                 var.prune(coord)
                 pruned.append((var, coord))
 
-        # print('pruned:', pruned)
-        # print('var.cur_dom', var.cur_dom)
         if len(var.cur_dom) is 0:
             return False, pruned
     return True, pruned

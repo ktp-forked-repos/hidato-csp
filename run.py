@@ -2,9 +2,9 @@ from new_csp import *
 from propogators import *
 import ast
 import sys
+from copy import deepcopy
 
 def print_hidato_soln(board):
-    print(board)
     for row in board:
         print([item.value for item in row if item])
 
@@ -101,25 +101,48 @@ if __name__ == "__main__":
         [None, 8, 16, None],
     ]
 
+    hard_board = [
+    [61, None, None, None, None, None, None, None, None, None, None, 116],
+    [None, 63, None, None, 68, None, None, 73, None, None, 118, None],
+    [None, None, 57, None, None, None, None, None, None, 120, None, None],
+    [None, None, None, None, 52, 77, 102, 105, None, None, None, None],
+    [None, 40, None, 50, 51, None, None, 106, 109, None, 137, None],
+    [None, None, None, 47, None, 79, 100, None, 108, None, None, None],
+    [None, None, None, 44, None, 80, 99, None, 95, None, None, None],
+    [None, 33, None, 31, 30, None, None, 97, 94, None, 134, None],
+    [None, None, None, None, 29, 82, 87, 88, None, None, None, None],
+    [None, None, 22, None, None, None, None, None, None, 131, None, None],
+    [None, 16, None, None, 19, None, None, 90, None, None, 3, None],
+    [14, None, None, None, None, None, None, None, None, None, None, 1]
+    ]
 
-    for b in [b1]:
-        print("Solving board:")
-        for row in b:
-            print(row)
+    print("Solving board:")
+    for row in hard_board:
+        for cell in row:
+            print(str(cell) + '\t', end='')
+        print()
 
-        '''        
-        print("=======================================================")
-        csp = CSP('Fucking csp', b)
-        solver = Backtracking(csp)
+    csp = CSP('FUCK this FUCKING SHITE', hard_board)
+    solver = Backtracking(csp)
+    solver.bt_search(prop_GAC)
+    print_hidato_soln(csp.board)
 
-        solver.bt_search(prop_FC)
-        print_hidato_soln(csp.board)
-        '''
-
-        print("=======================================================")
-        csp = CSP('Fucking csp', b)
-        solver = Backtracking(csp)
-        
-        print("GAC")
-        solver.bt_search(prop_GAC)
-        print_hidato_soln(csp.board)
+    # for b in [b1, b2, b3, b4, b5, b6, b7, b8]:
+    #     print("Solving board:")
+    #     for row in b:
+    #         print(row)
+    #
+    #     print("=======================================================")
+    #     csp = CSP('Fucking csp', deepcopy(b))
+    #     solver = Backtracking(csp)
+    #
+    #     solver.bt_search(prop_FC)
+    #     print_hidato_soln(csp.board)
+    #
+    #     print("=======================================================")
+    #     csp2 = CSP('Fucking csp', deepcopy(b))
+    #     solver = Backtracking(csp2)
+    #
+    #     print("GAC")
+    #     solver.bt_search(prop_GAC)
+    #     print_hidato_soln(csp2.board)

@@ -210,7 +210,6 @@ class CSP:
             Returns a list of constraints with var in their scope.
         """
         result = [c for c in self.constraints if var in c.scope or var is c.keystone]
-        print(var, result)
         return result
     def get_all_cons(self):
         """ (self) -> list of Constraint

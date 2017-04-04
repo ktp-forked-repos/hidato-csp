@@ -29,18 +29,12 @@ class Variable:
 
     def prune(self, coord):
         if coord in self.cur_dom: self.cur_dom.remove(coord)
-        print(self.cur_dom)
 
     def unprune(self, coord):
         if coord not in self.cur_dom: self.cur_dom.append(coord)
 
     def assign(self, coord):
         self.fixed = True
-        
-        if self.board[coord[0]][coord[1]]:
-            print(self.board)
-            print(self, coord, "Error: overplacement.")
-            exit()
         self.coord = coord
         self.board[coord[0]][coord[1]] = self
 
@@ -60,7 +54,7 @@ class Constraint:
         return 'Con-' + str(self.start) + '-' + str(self.middle)+ '-' + str(self.end)
 
     def check(self):
-        
+
         if not (self.start.coord and self.middle.coord and self.end.coord): return True
         s, m, e = self.start.coord, self.middle.coord, self.end.coord
 
@@ -118,7 +112,7 @@ class CSP:
         val = var.value
 
         ret = []
-        for constraint in self.constraints: 
+        for constraint in self.constraints:
             if var in constraint.scope:
                 ret.append(constraint)
 
@@ -179,7 +173,6 @@ class Backtracking:
 
             for coord in var.cur_dom:
                 var.assign(coord)
-                print("Assigned ", var, coord)
                 prunes = []
 
                 for vv in self.unasgn_vars:
@@ -196,9 +189,8 @@ class Backtracking:
                         return True
 
                 self.restore_coords(prunings + prunes)
- 
+
                 var.unassign()
-                print(var)
 
             self.unasgn_vars.append(var)
 
