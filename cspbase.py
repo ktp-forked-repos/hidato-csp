@@ -1,16 +1,6 @@
 import time
 from copy import deepcopy, copy
 
-def get_neighbours(x, y, m):
-    l = []
-    for xx in [-1, 0, 1]:
-        for yy in [-1, 0, 1]:
-            if xx is 0 and yy is 0: continue
-            if x + xx < 0 or y + yy < 0 or x + xx is len(m[0]) or y + yy is len(m):
-                continue
-            l.append(m[x+xx][y+yy])
-    return l
-
 def next_to(coord1, coord2):
     val = abs(coord1[0] - coord2[0]) <= 1 and abs(coord1[1] - coord2[1]) <= 1 and not coord1 == coord2
     return val
@@ -108,11 +98,11 @@ class CSP:
         self._variables = deepcopy(self.variables)
 
     def verify(self):
-        pos, remaining, cont = 1, len(self.variables) - 1, True 
+        pos, remaining, cont = 1, len(self.variables) - 1, True
         var = self.variables[1]
 
         while cont:
-            cur, nxt = self.variables[pos], self.variables[pos+1] 
+            cur, nxt = self.variables[pos], self.variables[pos+1]
             if next_to(cur.coord, nxt.coord):
                 cur += 1; remaining -= 1
                 if not remaining:
@@ -121,7 +111,7 @@ class CSP:
                 cont = False
 
         return "Success" if not remaining else "Failure"
-        
+
     def get_cons_with_var(self, var):
 
         val = var.value
