@@ -274,39 +274,4 @@ board_db = {
         [None, None, 2, 1, None, None, 16],
         [None, None, None, None, None, 17, None],
     ]
-
 }
-
-# e1 = [
-#     [None, None, 51, None, 42, 56, 55, 64],
-#     [46, None, 44, None, 41, 54, 57, None],
-#     [None, 45, 30, 24, 53, 40, None, 62],
-#     [27, 29, 25, 31, None, None, None, None],
-#     [28, None, None, 10, None, 22, 60, 38],
-#     [15, 13, 11, 8, None, 33, None, None],
-#     [14, None, None, 20, None, None, 3, 36],
-#     [None, None, None, 6, None, None, 1, 2],
-# ]
-
-# b1 = [
-#     [None, None, 22, 20, 19, 18],
-#     [None, 36, None, None, 15, None],
-#     [None, None, 30, None, 14, None],
-#     [None, 28, None, 33, None, 12],
-#     [3, 1, 6, None, 9, 11],
-#     [None, 4, None, 7, None, None],
-# ]
-# 'c1': [
-#     [61, None, None, None, None, None, None, None, None, None, None, 116],
-#     [None, 63, None, None, 68, None, None, 73, None, None, 118, None],
-#     [None, None, 57, None, None, None, None, None, None, 120, None, None],
-#     [None, None, None, None, 52, 77, 102, 105, None, None, None, None],
-#     [None, 40, None, 50, 51, None, None, 106, 109, None, 137, None],
-#     [None, None, None, 47, None, 79, 100, None, 108, None, None, None],
-#     [None, None, None, 44, None, 80, 99, None, 95, None, None, None],
-#     [None, 33, None, 31, 30, None, None, 97, 94, None, 134, None],
-#     [None, None, None, None, 29, 82, 87, 88, None, None, None, None],
-#     [None, None, 22, None, None, None, None, None, None, 131, None, None],
-#     [None, 16, None, None, 19, None, None, 90, None, None, 3, None],
-#     [14, None, None, None, None, None, None, None, None, None, None, 1]
-# ]
