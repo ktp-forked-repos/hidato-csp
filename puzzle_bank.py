@@ -2,56 +2,76 @@ a_level = ['a1', 'a2', 'a3', 'a4', 'a5', 'a6', 'a7', 'a8']
 b_level = ['b1', 'b2', 'b3', 'b4', 'b5', 'b6', 'b7', 'b8']
 c_level = ['c1', 'c2', 'c3', 'c4', 'c5', 'c6', 'c7', 'c8']
 d_level = ['d1', 'd2', 'd3', 'd4', 'd5', 'd6', 'd7', 'd8']
+e_level = ['e1']
+
 bt_safe_boards = a_level
-fc_safe_boards = a_level + b_level + c_level + d_level
-gac_safe_boards = a_level + b_level + c_level + d_level
+fc_safe_boards = a_level + b_level + c_level + d_level + e_level
+gac_safe_boards = a_level + b_level + c_level + d_level + e_level
 
 board_db = {
     'a1': [
-        [5, None, 2],
-        [None, 1, None],
-        [7, None, 9],
+        [13, None, None, 17, 18, 20],
+        [14, 15, None, 25, None, 19],
+        [None, 8, 10, 26, 24, None],
+        [7, 5, None, None, 36, 23],
+        [4, 1, None, 35, 31, 33],
+        [None, 3, 29, 30, None, None],
     ],
     'a2': [
-        [9, None, None],
-        [7, None, None],
-        [1, None, 5],
+        [32, 33, None, 29, 1, None],
+        [34, None, 30, 27, None, 2],
+        [None, 36, 26, 13, 11, 5],
+        [None, 25, 14, None, 10, 6],
+        [24, 22, 18, None, None, 7],
+        [None, 20, None, None, 16, 8],
     ],
     'a3': [
-        [1, 2, None, 4],
-        [7, 6, 3, 11],
-        [None, None, None, None],
-        [16, 15, 14, 13],
+        [6, 8, 4, 1, 2, 35],
+        [None, 5, 9, 3, 36, 34],
+        [13, 12, None, 10, 23, None],
+        [14, None, 16, 22, 32, 24],
+        [None, None, 21, None, 26, None],
+        [18, None, None, None, None, 27],
     ],
     'a4': [
-        [1, None, None, None],
-        [None, 13, 3, 16],
-        [12, None, 4, None],
-        [None, None, None, 5],
+        [None, 25, 12, 11, None, 8],
+        [26, 23, 5, None, 7, 9],
+        [None, 4, None, None, 14, None],
+        [3, 28, None, None, 17, 15],
+        [2, None, 19, 20, 36, 34],
+        [1, 30, None, None, 33, 35],
     ],
     'a5': [
-        [None, 15, 3, None],
-        [16, None, 2, None],
-        [10, None, None, 1],
-        [None, None, None, 7],
+        [35, 33, None, 31, None, None],
+        [36, None, None, 5, 9, 8],
+        [28, 29, 1, None, None, 12],
+        [27, 26, 3, 2, None, 13],
+        [None, 21, None, 18, 16, 14],
+        [None, 23, 20, 19, 17, None],
     ],
     'a6': [
-        [None, None, 15, 16],
-        [12, None, 1, None],
-        [11, None, 3, None],
-        [None, None, None, 5],
+        [17, 16, None, 1, 13, None],
+        [20, 18, None, None, 2, 11],
+        [19, None, None, 23, 10, None],
+        [32, 33, 26, 25, 4, 9],
+        [31, 27, None, 36, None, 5],
+        [None, None, None, 35, 7, 6],
     ],
     'a7': [
-        [1, None, 7, None],
-        [None, 2, 5, None],
-        [None, 14, None, 11],
-        [16, None, None, None],
+        [19, 18, None, 16, 11, 10],
+        [24, 20, 15, None, 9, 12],
+        [None, 25, None, 8, None, 34],
+        [None, 22, 7, 36, None, 33],
+        [27, 6, None, 4, None, None],
+        [28, None, 5, 31, None, 1],
     ],
     'a8': [
-        [None, None, None, None],
-        [None, None, None, 1],
-        [None, 7, 15, None],
-        [None, 8, 16, None],
+        [3, 2, 1, None, None, 32],
+        [None, 5, None, 9, 33, 31],
+        [None, None, None, 28, 30, None],
+        [12, 14, None, 26, 29, 35],
+        [None, 18, 20, 22, None, 36],
+        [16, 17, None, 21, 23, 24],
     ],
     'b1': [
         [18, None, 12, 13, 35, 36],
@@ -244,8 +264,29 @@ board_db = {
         [None, None, 14, None, None, None],
         [None, None, 9, None, 21, None],
         [12, None, None, None, None, None],
+    ],
+    'e1': [
+        [None, None, None, None, None, None, 47],
+        [None, None, 29, 35, 31, None, 49],
+        [23, None, 25, None, None, 44, None],
+        [None, None, None, None, None, None, None],
+        [None, None, 4, None, None, 39, 40],
+        [None, None, 2, 1, None, None, 16],
+        [None, None, None, None, None, 17, None],
     ]
+
 }
+
+# e1 = [
+#     [None, None, 51, None, 42, 56, 55, 64],
+#     [46, None, 44, None, 41, 54, 57, None],
+#     [None, 45, 30, 24, 53, 40, None, 62],
+#     [27, 29, 25, 31, None, None, None, None],
+#     [28, None, None, 10, None, 22, 60, 38],
+#     [15, 13, 11, 8, None, 33, None, None],
+#     [14, None, None, 20, None, None, 3, 36],
+#     [None, None, None, 6, None, None, 1, 2],
+# ]
 
 # b1 = [
 #     [None, None, 22, 20, 19, 18],

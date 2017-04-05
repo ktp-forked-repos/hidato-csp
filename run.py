@@ -6,7 +6,7 @@ from copy import deepcopy
 from benchmark import benchmark
 from cspbase import *
 from propogators import *
-from hb import *
+from puzzle_bank import *
 from heuristics import *
 
 def print_problem(board):
