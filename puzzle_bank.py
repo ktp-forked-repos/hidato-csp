@@ -4,7 +4,7 @@ c_level = ['c1', 'c2', 'c3', 'c4', 'c5', 'c6', 'c7', 'c8']
 d_level = ['d1', 'd2', 'd3', 'd4', 'd5', 'd6', 'd7', 'd8']
 e_level = ['e1']
 
-bt_safe_boards = a_level
+bt_safe_boards = a_level + b_level
 fc_safe_boards = a_level + b_level + c_level + d_level + e_level
 gac_safe_boards = a_level + b_level + c_level + d_level + e_level
 
